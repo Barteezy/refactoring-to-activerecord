@@ -28,16 +28,20 @@ class App < Sinatra::Application
   end
 
   get "/register" do
-    erb :register
+    user = User.new
+    erb :register, locals: {user: user}
   end
 
   post "/registrations" do
     user = User.new
     user.username = params[:username]
     user.password = params[:password]
-    user.save!
-    flash[:notice] = "Thanks for registering"
-    redirect "/"
+    if user.save
+      flash[:notice] = "Thanks for registering"
+      redirect "/"
+    else
+      erb :register, locals: {user: user}
+    end
   end
   #   if validate_registration_params
   #     insert_sql = <<-SQL
@@ -86,7 +90,8 @@ class App < Sinatra::Application
   end
 
   get "/fish/new" do
-    erb :"fish/new"
+    fish = Fish.new
+    erb :"fish/new", locals: {fish: fish}
   end
 
   get "/fish/:id" do
@@ -100,8 +105,11 @@ class App < Sinatra::Application
     fish.name = params[:name]
     fish.wikipedia_page = params[:wikipedia_page]
     fish.user_id = current_user["id"]
-    fish.save!
+    if fish.save
+      flash[:notice] = "Fish Created"
     redirect "/"
+    else
+      erb :"fish/new", locals: {fish: fish}
     # if validate_fish_params
     #   insert_sql = <<-SQL
     #   INSERT INTO fish (name, wikipedia_page, user_id)
@@ -116,6 +124,7 @@ class App < Sinatra::Application
     # else
     #   erb :"fish/new"
     # end
+      end
   end
 
   private

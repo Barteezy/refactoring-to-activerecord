@@ -1,4 +1,11 @@
 <h2>Register</h2>
+<div>
+<% if user.errors.any? %>
+    <% user.errors.full_messages.each do |msg| %>
+        <p><%= msg %></p>
+    <% end %>
+    </div>
+<% end %>
 
 <form action="/registrations" method="post">
   <ul>
