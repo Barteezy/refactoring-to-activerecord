@@ -1,6 +1,7 @@
 require "sinatra"
 require "gschool_database_connection"
 require "rack-flash"
+require "./lib/user"
 
 class App < Sinatra::Application
   enable :sessions
@@ -28,20 +29,28 @@ class App < Sinatra::Application
   end
 
   post "/registrations" do
-    if validate_registration_params
-      insert_sql = <<-SQL
-      INSERT INTO users (username, password)
-      VALUES ('#{params[:username]}', '#{params[:password]}')
-      SQL
+    @user = User.new
+    @user.username = params[:username]
+    @user.password = params[:password]
+    @user.save!
 
-      @database_connection.sql(insert_sql)
+    redirect "/"
 
-      flash[:notice] = "Thanks for registering"
-      redirect "/"
-    else
-      erb :register
-    end
   end
+  #   if validate_registration_params
+  #     insert_sql = <<-SQL
+  #     INSERT INTO users (username, password)
+  #     VALUES ('#{params[:username]}', '#{params[:password]}')
+  #     SQL
+  #
+  #     @database_connection.sql(insert_sql)
+  #
+  #     flash[:notice] = "Thanks for registering"
+  #     redirect "/"
+  #   else
+  #     erb :register
+  #   end
+  # end
 
   post "/sessions" do
     if validate_authentication_params
