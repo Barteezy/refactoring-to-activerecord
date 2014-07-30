@@ -90,25 +90,32 @@ class App < Sinatra::Application
   end
 
   get "/fish/:id" do
-    fish = @database_connection.sql("SELECT * FROM fish WHERE id = #{params[:id]}").first
+    fish = Fish.find(params[:id])
+    # fish = @database_connection.sql("SELECT * FROM fish WHERE id = #{params[:id]}").first
     erb :"fish/show", locals: {fish: fish}
   end
 
   post "/fish" do
-    if validate_fish_params
-      insert_sql = <<-SQL
-      INSERT INTO fish (name, wikipedia_page, user_id)
-      VALUES ('#{params[:name]}', '#{params[:wikipedia_page]}', #{current_user["id"]})
-      SQL
-
-      @database_connection.sql(insert_sql)
-
-      flash[:notice] = "Fish Created"
-
-      redirect "/"
-    else
-      erb :"fish/new"
-    end
+    fish = Fish.new
+    fish.name = params[:name]
+    fish.wikipedia_page = params[:wikipedia_page]
+    fish.user_id = current_user["id"]
+    fish.save!
+    redirect "/"
+    # if validate_fish_params
+    #   insert_sql = <<-SQL
+    #   INSERT INTO fish (name, wikipedia_page, user_id)
+    #   VALUES ('#{params[:name]}', '#{params[:wikipedia_page]}', #{current_user["id"]})
+    #   SQL
+    #
+    #   @database_connection.sql(insert_sql)
+    #
+    #   flash[:notice] = "Fish Created"
+    #
+    #   redirect "/"
+    # else
+    #   erb :"fish/new"
+    # end
   end
 
   private
@@ -180,28 +187,32 @@ class App < Sinatra::Application
   end
 
   def username_available?(username)
-    existing_users = @database_connection.sql("SELECT * FROM users where username = '#{username}'")
+    existing_users = User.where(username: username)
+    # existing_users = @database_connection.sql("SELECT * FROM users where username = '#{username}'")
 
     existing_users.length == 0
   end
 
   def authenticate_user
-    select_sql = <<-SQL
-    SELECT * FROM users
-    WHERE username = '#{params[:username]}' AND password = '#{params[:password]}'
-    SQL
 
-    @database_connection.sql(select_sql).first
+    User.find_by(username: params[:username], password: params[:password])
+    # select_sql = <<-SQL
+    # SELECT * FROM users
+    # WHERE username = '#{params[:username]}' AND password = '#{params[:password]}'
+    # SQL
+    #
+    # @database_connection.sql(select_sql).first
   end
 
   def current_user
     if session[:user_id]
-      select_sql = <<-SQL
-      SELECT * FROM users
-      WHERE id = #{session[:user_id]}
-      SQL
-
-      @database_connection.sql(select_sql).first
+      User.find(session[:user_id])
+      # select_sql = <<-SQL
+      # SELECT * FROM users
+      # WHERE id = #{session[:user_id]}
+      # SQL
+      #
+      # @database_connection.sql(select_sql).first
     else
       nil
     end
